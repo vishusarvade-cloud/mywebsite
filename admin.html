@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lab Admin Panel</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background-color: #f2f2f2;
+        }
+
+        input, select {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        button {
+            padding: 8px;
+            background-color: green;
+            color: white;
+            border: none;
+            margin: 5px;
+        }
+
+        table {
+            margin: auto;
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 90%;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>Lab Data Entry Panel</h2>
+
+<input type="text" id="test" placeholder="Test Name">
+<input type="text" id="centre" placeholder="Centre Name">
+<input type="text" id="dr" placeholder="Dr. Reference">
+
+<select id="payment">
+    <option value="">Select Payment</option>
+    <option>Cash</option>
+    <option>Credit</option>
+</select>
+
+<button onclick="addData()">Add</button>
+<button onclick="downloadExcel()">Download Excel</button>
+
+<h3>Total Records: <span id="count">0</span></h3>
+
+<table id="table">
+    <tr>
+        <th>Date</th>
+        <th>Test Name</th>
+        <th>Centre</th>
+        <th>Doctor</th>
+        <th>Payment</th>
+        <th>Action</th>
+    </tr>
+</table>
+
+<script>
+
+// load saved data
+window.onload = function() {
+    var data = JSON.parse(localStorage.getItem("labData")) || [];
+    data.forEach(addRowToTable);
+    updateCount();
+};
+
+function addData() {
+    var test = document.getElementById("test").value;
+    var centre = document.getElementById("centre").value;
+    var dr = document.getElementById("dr").value;
+    var payment = document.getElementById("payment").value;
+
+    if(test=="" || centre=="" || dr=="" || payment=="") {
+        alert("All fields required");
+        return;
+    }
+
+    var date = new Date().toLocaleDateString();
+
+    var newData = {date, test, centre, dr, payment};
+
+    var data = JSON.parse(localStorage.getItem("labData")) || [];
+    data.push(newData);
+    localStorage.setItem("labData", JSON.stringify(data));
+
+    addRowToTable(newData);
+    updateCount();
+
+    // clear fields
+    document.getElementById("test").value = "";
+    document.getElementById("centre").value = "";
+    document.getElementById("dr").value = "";
+    document.getElementById("payment").value = "";
+}
+
+function addRowToTable(d) {
+    var table = document.getElementById("table");
+    var row = table.insertRow();
+
+    row.insertCell(0).innerHTML = d.date;
+    row.insertCell(1).innerHTML = d.test;
+    row.insertCell(2).innerHTML = d.centre;
+    row.insertCell(3).innerHTML = d.dr;
+    row.insertCell(4).innerHTML = d.payment;
+    row.insertCell(5).innerHTML = "<button onclick='deleteRow(this)'>Delete</button>";
+}
+
+function deleteRow(btn) {
+    var row = btn.parentNode.parentNode;
+    var index = row.rowIndex - 1;
+
+    var data = JSON.parse(localStorage.getItem("labData"));
+    data.splice(index,1);
+    localStorage.setItem("labData", JSON.stringify(data));
+
+    row.remove();
+    updateCount();
+}
+
+function updateCount() {
+    var data = JSON.parse(localStorage.getItem("labData")) || [];
+    document.getElementById("count").innerText = data.length;
+}
+
+function downloadExcel() {
+    var data = JSON.parse(localStorage.getItem("labData")) || [];
+
+    var csv = "Date,Test,Centre,Doctor,Payment\n";
+
+    data.forEach(function(d){
+        csv += `${d.date},${d.test},${d.centre},${d.dr},${d.payment}\n`;
+    });
+
+    var blob = new Blob([csv], {type: "text/csv"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "lab_data.csv";
+    a.click();
+}
+
+</script>
+
+</body>
+</html>
